@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "mncc.h"
+
 int main()
 {
 	struct sockaddr_un sunaddr;
@@ -29,7 +31,21 @@ int main()
 		fprintf(stderr, "Could not connect to mncc socket\n");
 	}
 
+	static char buf[sizeof(struct gsm_mncc)+1024];
+	struct gsm_mncc *mncc_prim = (struct gsm_mncc *)buf;
+
 	while(1) {
 		sleep(1);
+		memset(buf, 0, sizeof(buf));
+		rc = recv(fd, buf, sizeof(buf), 0);
+		printf("recv: %d\n", rc);
+		printf("type: %d\n", mncc_prim->msg_type);
+		printf("callref: %d\n", mncc_prim->callref);
+		printf("fields: %d\n", mncc_prim->fields);
+
+		switch (mncc_prim->msg_type) {
+		case MNCC_F_SSVERSION:
+			printf("ssversion: %d:%s\n", mncc_prim->ssversion.len, mncc_prim->ssversion.info);
+		}
 	}
 }
