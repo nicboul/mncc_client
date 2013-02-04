@@ -41,6 +41,14 @@ struct gsm_mncc *create_mncc(int msg_type, unsigned int callref)
 	return mncc;
 }
 
+void setup_compl_ind(struct gsm_mncc *mncc_prim)
+{
+	struct gsm_mncc *mncc;
+
+	mncc = create_mncc(MNCC_FRAME_RECV, mncc_prim->callref);
+	send_mncc(mncc);
+}
+
 void setup_cnf(struct gsm_mncc *mncc_prim)
 {
 	struct gsm_mncc *mncc = NULL;
@@ -67,6 +75,11 @@ void call_conf_ind(struct gsm_mncc *mncc_prim)
 	mncc->lchan_mode = 0x01; /* GSM v1 */
 	mncc->lchan_type = 0x02;
 	send_mncc(mncc);
+}
+
+void tchf_recv(struct gsm_data_frame *mncc_prim)
+{
+	printf("GSM TCHF Frame from %u\n", mncc_prim->callref);
 }
 
 void setup_ind(struct gsm_mncc *mncc_prim)
@@ -122,6 +135,10 @@ void setup_ind(struct gsm_mncc *mncc_prim)
 	strncpy(mncc->calling.number, mncc_prim->calling.number, 33);
 
 	send_mncc(mncc);
+
+	/* XXX start TCH ? */
+	mncc = create_mncc(MNCC_FRAME_RECV, mncc_prim->callref);
+	send_mncc(mncc);
 }
 
 int main()
@@ -170,6 +187,10 @@ int main()
 			printf("MNCC_SETUP_CNF\n");
 			setup_cnf(mncc_prim);
 			break;
+		case GSM_TCHF_FRAME:
+			printf("GSM_TCHF_FRAME\n");
+			tchf_recv((struct gsm_data_frame *)mncc_prim);
+			break;
 		case MNCC_START_DTMF_IND:
 			printf("MNCC_START_DTMF_IND\n");
 			break;
@@ -181,6 +202,7 @@ int main()
 			break;
 		case MNCC_SETUP_COMPL_IND:
 			printf("MNCC_SETUP_COMPL_IND\n");
+			setup_compl_ind(mncc_prim);
 			break;
 		case MNCC_DISC_IND:
 			printf("MNCC_DISC_IND\n");
