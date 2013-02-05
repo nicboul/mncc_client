@@ -43,9 +43,20 @@ struct gsm_mncc *create_mncc(int msg_type, unsigned int callref)
 
 void setup_compl_ind(struct gsm_mncc *mncc_prim)
 {
-	struct gsm_mncc *mncc;
+	/* modify mode */
+	mncc = create_mncc(MNCC_LCHAN_MODIFY, mncc_prim->callref);
+	mncc->lchan_mode = 0x01; /* GSM V1 */
+	send_mncc(mncc);
+}
 
-	mncc = create_mncc(MNCC_FRAME_RECV, mncc_prim->callref);
+void mncc_alert_ind(struct gsm_mncc *mncc_prim)
+{
+	/* send alerting to remote */
+	if (mncc_prim->callref == ms1.callref)
+		mncc = create_mncc(MNCC_ALERT_REQ, ms2.callref);
+	else
+		mncc = create_mncc(MNCC_ALERT_REQ, ms1.callref);
+
 	send_mncc(mncc);
 }
 
@@ -135,10 +146,6 @@ void setup_ind(struct gsm_mncc *mncc_prim)
 	strncpy(mncc->calling.number, mncc_prim->calling.number, 33);
 
 	send_mncc(mncc);
-
-	/* XXX start TCH ? */
-	mncc = create_mncc(MNCC_FRAME_RECV, mncc_prim->callref);
-	send_mncc(mncc);
 }
 
 int main()
@@ -199,6 +206,7 @@ int main()
 			break;
 		case MNCC_ALERT_IND:
 			printf("MNCC_ALERT_IND\n");
+			mncc_alert_ind(mncc_prim);
 			break;
 		case MNCC_SETUP_COMPL_IND:
 			printf("MNCC_SETUP_COMPL_IND\n");
