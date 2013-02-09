@@ -48,6 +48,7 @@ void setup_compl_ind(struct gsm_mncc *mncc_prim)
 	/* modify mode */
 	mncc = create_mncc(MNCC_LCHAN_MODIFY, mncc_prim->callref);
 	mncc->lchan_mode = 0x01; /* GSM V1 */
+	mncc->lchan_type = 0x02;
 	send_mncc(mncc);
 }
 
