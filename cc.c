@@ -43,6 +43,8 @@ struct gsm_mncc *create_mncc(int msg_type, unsigned int callref)
 
 void setup_compl_ind(struct gsm_mncc *mncc_prim)
 {
+	struct gsm_mncc *mncc;
+
 	/* modify mode */
 	mncc = create_mncc(MNCC_LCHAN_MODIFY, mncc_prim->callref);
 	mncc->lchan_mode = 0x01; /* GSM V1 */
@@ -51,6 +53,8 @@ void setup_compl_ind(struct gsm_mncc *mncc_prim)
 
 void mncc_alert_ind(struct gsm_mncc *mncc_prim)
 {
+	struct gsm_mncc *mncc;
+
 	/* send alerting to remote */
 	if (mncc_prim->callref == ms1.callref)
 		mncc = create_mncc(MNCC_ALERT_REQ, ms2.callref);
