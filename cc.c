@@ -86,9 +86,9 @@ void setup_cnf(struct gsm_mncc *mncc_prim)
 void call_conf_ind(struct gsm_mncc *mncc_prim)
 {
 	struct gsm_mncc *mncc = NULL;
-
+	/* modify logical channel to GSM v1 */
 	mncc = create_mncc(MNCC_LCHAN_MODIFY, mncc_prim->callref);
-	mncc->lchan_mode = 0x01; /* GSM v1 */
+	mncc->lchan_mode = 0x01;
 	mncc->lchan_type = 0x02;
 	send_mncc(mncc);
 }
@@ -120,6 +120,12 @@ void setup_ind(struct gsm_mncc *mncc_prim)
 	ms1.remote_ref = ms2.callref;
 	ms2.remote_ref = ms1.callref;
 
+	/* modify logical channel to GSM v1 */
+	mncc = create_mncc(MNCC_LCHAN_MODIFY, ms1.callref);
+	mncc->lchan_mode = 0x01;
+	mncc->lchan_type = 0x02;
+	send_mncc(mncc);
+
 	/* 5.2.1.1.3 */
 	mncc = create_mncc(MNCC_CALL_PROC_REQ, ms1.callref);
 	mncc->fields |= MNCC_F_PROGRESS;
@@ -128,15 +134,10 @@ void setup_ind(struct gsm_mncc *mncc_prim)
 	mncc->progress.descr = 8;
 	send_mncc(mncc);
 
-	/* modify mode */
-	mncc = create_mncc(MNCC_LCHAN_MODIFY, ms1.callref);
-	mncc->lchan_mode = 0x01; /* GSM V1 */
-	send_mncc(mncc);
-
 	/* setup the called party */
 	mncc = create_mncc(MNCC_SETUP_REQ, ms2.callref);
+	mncc->fields = MNCC_F_CALLING | MNCC_F_CALLED;
 
-	mncc->fields = MNCC_F_CALLING & MNCC_F_CALLED;
 	mncc->called.type = mncc_prim->called.type;
 	mncc->called.plan = mncc_prim->called.plan;
 	mncc->called.present = mncc_prim->called.present;
